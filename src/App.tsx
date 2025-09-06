@@ -11,6 +11,10 @@ import Timetable from "./pages/Timetable";
 import StudentView from "./pages/StudentView";
 import Demo from "./pages/Demo";
 import NotFound from "./pages/NotFound";
+import TimetableDashboard from "./pages/TimetableDashboard";
+import ImportData from "./pages/ImportData";
+import GenerateConsole from "./pages/GenerateConsole";
+import TimetableViewer from "./pages/TimetableViewer";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +32,10 @@ const App = () => (
           <Route path="/timetable" element={<Timetable />} />
           <Route path="/student-view" element={<StudentView />} />
           <Route path="/demo" element={<Demo />} />
+          <Route path="/timetable-dashboard" element={<TimetableDashboard />} />
+          <Route path="/import" element={<ImportData />} />
+          <Route path="/generate" element={<GenerateConsole />} />
+          <Route path="/timetable-view" element={<TimetableViewer />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
