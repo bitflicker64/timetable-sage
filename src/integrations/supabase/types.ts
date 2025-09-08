@@ -234,6 +234,33 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          name: string
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id: string
+          name: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          name?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       programs: {
         Row: {
           code: string
@@ -438,7 +465,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: Database["public"]["Enums"]["user_role"]
+      }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_faculty: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
     }
     Enums: {
       class_type: "lecture" | "lab" | "tutorial" | "practical"
@@ -450,6 +488,7 @@ export type Database = {
         | "friday"
         | "saturday"
       semester_type: "odd" | "even" | "summer"
+      user_role: "admin" | "faculty" | "student"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -587,6 +626,7 @@ export const Constants = {
         "saturday",
       ],
       semester_type: ["odd", "even", "summer"],
+      user_role: ["admin", "faculty", "student"],
     },
   },
 } as const
