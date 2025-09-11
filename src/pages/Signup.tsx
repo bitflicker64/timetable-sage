@@ -1,61 +1,66 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Navbar from "@/components/Navbar";
-import { Mail, Lock, User, Building, Eye, EyeOff } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Signup = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    username: "",
     password: "",
-    confirmPassword: "",
-    institution: "",
-    role: ""
+    confirmPassword: ""
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { signUp, user } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
+
+  const validatePassword = (password: string) => {
+    return password.length >= 8 && /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Basic validation
+    // Validation
     if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: "Password Mismatch",
-        description: "Passwords do not match. Please try again.",
-        variant: "destructive",
-      });
       setIsLoading(false);
       return;
     }
 
-    // Simulate account creation (replace with real Firebase auth)
-    setTimeout(() => {
-      if (formData.name && formData.email && formData.password) {
-        toast({
-          title: "Account Created Successfully",
-          description: "Welcome to AI Timetable Generator! Please login to continue.",
-        });
-        navigate("/login");
-      } else {
-        toast({
-          title: "Registration Failed",
-          description: "Please fill in all required fields.",
-          variant: "destructive",
-        });
-      }
+    if (!validatePassword(formData.password)) {
       setIsLoading(false);
-    }, 1000);
+      return;
+    }
+
+    const { error } = await signUp(
+      formData.email, 
+      formData.password,
+      {
+        name: formData.name,
+        username: formData.username
+      }
+    );
+
+    if (!error) {
+      navigate("/login");
+    }
+
+    setIsLoading(false);
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -79,7 +84,7 @@ const Signup = () => {
             <CardHeader className="space-y-1">
               <CardTitle className="text-2xl font-semibold">Sign Up</CardTitle>
               <CardDescription>
-                Create your account to get started with AI Timetable Generator
+                Create your account to get started with TIME GENIX
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -117,34 +122,25 @@ const Signup = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="institution">Institution</Label>
+                  <Label htmlFor="username">Username</Label>
                   <div className="relative">
-                    <Building className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                    <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                     <Input
-                      id="institution"
+                      id="username"
                       type="text"
-                      placeholder="University of Excellence"
-                      value={formData.institution}
-                      onChange={(e) => handleInputChange("institution", e.target.value)}
+                      placeholder="johndoe"
+                      value={formData.username}
+                      onChange={(e) => handleInputChange("username", e.target.value)}
                       className="pl-10"
                       required
+                      minLength={3}
+                      maxLength={30}
+                      pattern="[a-zA-Z0-9_-]+"
                     />
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
-                  <Select onValueChange={(value) => handleInputChange("role", value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select your role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="admin">System Administrator</SelectItem>
-                      <SelectItem value="academic">Academic Coordinator</SelectItem>
-                      <SelectItem value="faculty">Faculty Member</SelectItem>
-                      <SelectItem value="student">Student</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <p className="text-xs text-slate-500">
+                    3-30 characters. Only letters, numbers, underscores, and hyphens.
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -159,6 +155,7 @@ const Signup = () => {
                       onChange={(e) => handleInputChange("password", e.target.value)}
                       className="pl-10 pr-10"
                       required
+                      minLength={8}
                     />
                     <button
                       type="button"
@@ -168,6 +165,14 @@ const Signup = () => {
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
+                  <p className="text-xs text-slate-500">
+                    Minimum 8 characters with uppercase, lowercase, and number.
+                  </p>
+                  {formData.password && !validatePassword(formData.password) && (
+                    <p className="text-xs text-red-500">
+                      Password must be at least 8 characters with uppercase, lowercase, and number.
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -191,31 +196,26 @@ const Signup = () => {
                       {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <input
-                    id="terms"
-                    type="checkbox"
-                    className="rounded border-slate-300 text-primary focus:ring-primary"
-                    required
-                  />
-                  <Label htmlFor="terms" className="text-sm text-slate-600">
-                    I agree to the{" "}
-                    <Link to="/terms" className="text-primary hover:text-primary-hover">
-                      Terms of Service
-                    </Link>{" "}
-                    and{" "}
-                    <Link to="/privacy" className="text-primary hover:text-primary-hover">
-                      Privacy Policy
-                    </Link>
-                  </Label>
+                  {formData.confirmPassword && formData.password !== formData.confirmPassword && (
+                    <p className="text-xs text-red-500">
+                      Passwords do not match.
+                    </p>
+                  )}
                 </div>
 
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={isLoading}
+                  disabled={
+                    isLoading || 
+                    !formData.name || 
+                    !formData.email || 
+                    !formData.username ||
+                    !formData.password || 
+                    !formData.confirmPassword ||
+                    formData.password !== formData.confirmPassword ||
+                    !validatePassword(formData.password)
+                  }
                 >
                   {isLoading ? "Creating Account..." : "Create Account"}
                 </Button>

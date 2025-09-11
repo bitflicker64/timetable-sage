@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Navbar from "@/components/Navbar";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -14,40 +14,30 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { signIn, user } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate authentication (replace with real Firebase auth)
-    setTimeout(() => {
-      if (email && password) {
-        toast({
-          title: "Login Successful",
-          description: "Welcome to AI Timetable Generator!",
-        });
-        // Store auth state (in real app, use proper auth context)
-        localStorage.setItem("isAuthenticated", "true");
-        navigate("/dashboard");
-      } else {
-        toast({
-          title: "Login Failed",
-          description: "Please enter valid credentials.",
-          variant: "destructive",
-        });
-      }
-      setIsLoading(false);
-    }, 1000);
+    const { error } = await signIn(email, password);
+    
+    if (!error) {
+      navigate("/dashboard");
+    }
+
+    setIsLoading(false);
   };
 
   const handleDemoLogin = () => {
-    setEmail("admin@university.edu");
-    setPassword("demo123");
-    toast({
-      title: "Demo Credentials Loaded",
-      description: "Click Login to continue with demo account.",
-    });
+    setEmail("admin@timegenix.com");
+    setPassword("demo123!");
   };
 
   return (
@@ -59,7 +49,7 @@ const Login = () => {
           <div className="text-center">
             <h1 className="text-3xl font-bold text-slate-900">Welcome Back</h1>
             <p className="mt-2 text-slate-600">
-              Sign in to your AI Timetable Generator account
+              Sign in to your TIME GENIX account
             </p>
           </div>
 
@@ -79,7 +69,7 @@ const Login = () => {
                     <Input
                       id="email"
                       type="email"
-                      placeholder="admin@university.edu"
+                      placeholder="admin@timegenix.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="pl-10"
@@ -111,29 +101,10 @@ const Login = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      id="remember"
-                      type="checkbox"
-                      className="rounded border-slate-300 text-primary focus:ring-primary"
-                    />
-                    <Label htmlFor="remember" className="text-sm text-slate-600">
-                      Remember me
-                    </Label>
-                  </div>
-                  <Link 
-                    to="/forgot-password" 
-                    className="text-sm text-primary hover:text-primary-hover"
-                  >
-                    Forgot password?
-                  </Link>
-                </div>
-
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={isLoading}
+                  disabled={isLoading || !email || !password}
                 >
                   {isLoading ? "Signing in..." : "Sign In"}
                 </Button>
@@ -171,14 +142,13 @@ const Login = () => {
             </CardContent>
           </Card>
 
-          {/* Quick Access Info */}
           <Card className="bg-blue-50 border-blue-200">
             <CardContent className="pt-6">
               <div className="text-center space-y-2">
                 <h3 className="font-semibold text-blue-900">Demo Access</h3>
                 <p className="text-sm text-blue-700">
-                  Email: admin@university.edu<br />
-                  Password: demo123
+                  Email: admin@timegenix.com<br />
+                  Password: demo123!
                 </p>
               </div>
             </CardContent>
