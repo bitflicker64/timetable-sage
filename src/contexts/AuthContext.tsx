@@ -127,14 +127,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         toast({
-          title: "Sign In Failed", 
-          description: error.message,
+          title: "Login Failed",
+          description: error.message === "Invalid login credentials" 
+            ? "Invalid email or password. Please check your credentials and try again."
+            : error.message,
           variant: "destructive",
         });
       } else {
         toast({
-          title: "Welcome Back!",
-          description: "You have successfully signed in.",
+          title: "Welcome back!",
+          description: "You have successfully logged in."
         });
       }
 

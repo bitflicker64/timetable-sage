@@ -17,6 +17,7 @@ import TimetableDashboard from "./pages/TimetableDashboard";
 import ImportData from "./pages/ImportData";
 import GenerateConsole from "./pages/GenerateConsole";
 import TimetableViewer from "./pages/TimetableViewer";
+import AdminSetup from "./pages/AdminSetup";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/admin-setup" element={<AdminSetup />} />
             <Route 
               path="/dashboard" 
               element={

@@ -42,9 +42,9 @@ const Landing = () => {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link to="/login">
+                <Link to="/admin-setup">
                   <Button className="btn-hero w-full sm:w-auto">
-                    Get Started
+                    Setup Admin Account
                   </Button>
                 </Link>
                 <Link to="/demo">
