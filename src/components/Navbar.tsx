@@ -1,24 +1,12 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, Calendar } from "lucide-react";
-import { useState } from "react";
 import logoImage from "@/assets/logo.jpg";
+import { useAuth } from "@/contexts/AuthContext";
+import { ProfileDropdown } from "@/components/ProfileDropdown";
 
-interface NavbarProps {
-  isAuthenticated?: boolean;
-  onLogout?: () => void;
-}
-
-const Navbar = ({ isAuthenticated = false, onLogout }: NavbarProps) => {
+const Navbar = () => {
   const location = useLocation();
-  const navigate = useNavigate();
-  
-  const handleLogout = () => {
-    if (onLogout) {
-      onLogout();
-    }
-    navigate("/");
-  };
+  const { user } = useAuth();
 
   return (
     <nav className="nav-professional">
@@ -35,7 +23,7 @@ const Navbar = ({ isAuthenticated = false, onLogout }: NavbarProps) => {
 
           {/* Navigation Links */}
           <div className="hidden md:flex items-center space-x-8">
-            {isAuthenticated ? (
+            {user ? (
               <>
                 <Link 
                   to="/dashboard" 
@@ -82,22 +70,8 @@ const Navbar = ({ isAuthenticated = false, onLogout }: NavbarProps) => {
 
           {/* Auth Buttons */}
           <div className="flex items-center space-x-4">
-            {isAuthenticated ? (
-              <div className="flex items-center space-x-3">
-                <div className="hidden sm:flex items-center space-x-2 text-sm text-muted-foreground">
-                  <User className="h-4 w-4" />
-                  <span>Admin</span>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleLogout}
-                  className="flex items-center space-x-2"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span className="hidden sm:inline">Logout</span>
-                </Button>
-              </div>
+            {user ? (
+              <ProfileDropdown />
             ) : (
               <div className="flex items-center space-x-3">
                 <Link to="/login">

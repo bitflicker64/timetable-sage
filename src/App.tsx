@@ -18,6 +18,7 @@ import ImportData from "./pages/ImportData";
 import GenerateConsole from "./pages/GenerateConsole";
 import TimetableViewer from "./pages/TimetableViewer";
 import AdminSetup from "./pages/AdminSetup";
+import About from "./pages/About";
 
 const queryClient = new QueryClient();
 
@@ -58,8 +59,9 @@ const App = () => (
               } 
             />
             <Route path="/demo" element={<Demo />} />
+            <Route path="/about" element={<About />} />
             <Route 
-              path="/timetable-dashboard" 
+              path="/timetable-dashboard"
               element={
                 <ProtectedRoute requireAdmin>
                   <TimetableDashboard />

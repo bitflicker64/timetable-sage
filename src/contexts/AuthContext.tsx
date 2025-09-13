@@ -10,6 +10,7 @@ interface Profile {
   name: string;
   role: 'admin' | 'faculty' | 'student';
   theme: string;
+  profile_picture?: string;
   created_at: string;
   updated_at: string;
 }

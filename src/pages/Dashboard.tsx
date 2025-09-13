@@ -126,10 +126,10 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Theme Settings */}
-          <div>
-            <ThemeSwitcher />
-          </div>
+        {/* Theme Settings */}
+        <div>
+          <ThemeSwitcher />
+        </div>
         </div>
 
         {/* Quick Links */}

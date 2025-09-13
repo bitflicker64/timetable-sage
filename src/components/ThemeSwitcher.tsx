@@ -10,8 +10,6 @@ import { useToast } from '@/hooks/use-toast';
 const themes = [
   { id: 'light', name: 'Light', description: 'Clean and bright interface' },
   { id: 'dark', name: 'Dark', description: 'Easy on the eyes' },
-  { id: 'cyberpunk', name: 'Cyberpunk', description: 'Neon futuristic theme' },
-  { id: 'nature', name: 'Nature', description: 'Green and calming' },
 ];
 
 export function ThemeSwitcher() {
@@ -41,7 +39,7 @@ export function ThemeSwitcher() {
 
   const applyTheme = (themeId: string) => {
     // Remove existing theme classes
-    document.documentElement.classList.remove('light', 'dark', 'cyberpunk', 'nature');
+    document.documentElement.classList.remove('light', 'dark');
     
     // Add new theme class
     document.documentElement.classList.add(themeId);
@@ -49,26 +47,28 @@ export function ThemeSwitcher() {
     // Update CSS custom properties based on theme
     const root = document.documentElement;
     
-    switch (themeId) {
-      case 'dark':
-        root.style.setProperty('--background', '222 84% 4.9%');
-        root.style.setProperty('--foreground', '210 40% 98%');
-        root.style.setProperty('--primary', '217.2 91.2% 59.8%');
-        break;
-      case 'cyberpunk':
-        root.style.setProperty('--background', '240 10% 3.9%');
-        root.style.setProperty('--foreground', '300 100% 95%');
-        root.style.setProperty('--primary', '300 100% 50%');
-        break;
-      case 'nature':
-        root.style.setProperty('--background', '120 20% 98%');
-        root.style.setProperty('--foreground', '120 10% 9%');
-        root.style.setProperty('--primary', '120 60% 40%');
-        break;
-      default: // light
-        root.style.setProperty('--background', '0 0% 100%');
-        root.style.setProperty('--foreground', '222.2 84% 4.9%');
-        root.style.setProperty('--primary', '222.2 47.4% 11.2%');
+    if (themeId === 'dark') {
+      root.style.setProperty('--background', '222 84% 4.9%');
+      root.style.setProperty('--foreground', '210 40% 98%');
+      root.style.setProperty('--card', '222 84% 4.9%');
+      root.style.setProperty('--card-foreground', '210 40% 98%');
+      root.style.setProperty('--popover', '222 84% 4.9%');
+      root.style.setProperty('--popover-foreground', '210 40% 98%');
+      root.style.setProperty('--muted', '217.2 32.6% 17.5%');
+      root.style.setProperty('--muted-foreground', '215 20.2% 65.1%');
+      root.style.setProperty('--border', '217.2 32.6% 17.5%');
+      root.style.setProperty('--input', '217.2 32.6% 17.5%');
+    } else {
+      root.style.setProperty('--background', '0 0% 100%');
+      root.style.setProperty('--foreground', '222.2 84% 4.9%');
+      root.style.setProperty('--card', '0 0% 100%');
+      root.style.setProperty('--card-foreground', '222.2 84% 4.9%');
+      root.style.setProperty('--popover', '0 0% 100%');
+      root.style.setProperty('--popover-foreground', '222.2 84% 4.9%');
+      root.style.setProperty('--muted', '210 40% 98%');
+      root.style.setProperty('--muted-foreground', '215.4 16.3% 46.9%');
+      root.style.setProperty('--border', '214.3 31.8% 91.4%');
+      root.style.setProperty('--input', '214.3 31.8% 91.4%');
     }
   };
 
