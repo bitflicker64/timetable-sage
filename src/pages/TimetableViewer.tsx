@@ -3,6 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Navbar from '@/components/Navbar';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -16,26 +19,33 @@ import {
   Filter,
   Download,
   Edit,
-  AlertTriangle
+  AlertTriangle,
+  Plus,
+  Save
 } from 'lucide-react';
 
 interface ScheduledClass {
   id: string;
   course_sections: {
+    id: string;
     section_name: string;
     courses: {
+      id: string;
       name: string;
       code: string;
     };
   };
   faculty: {
+    id: string;
     name: string;
   };
   rooms: {
+    id: string;
     name: string;
     code: string;
   };
   timeslots: {
+    id: string;
     day_of_week: string;
     start_time: string;
     end_time: string;
@@ -52,6 +62,17 @@ const TimetableViewer = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDay, setFilterDay] = useState('');
   const [selectedClass, setSelectedClass] = useState<ScheduledClass | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [courses, setCourses] = useState<any[]>([]);
+  const [faculty, setFaculty] = useState<any[]>([]);
+  const [rooms, setRooms] = useState<any[]>([]);
+  const [timeslots, setTimeslots] = useState<any[]>([]);
+  const [editForm, setEditForm] = useState({
+    course_section_id: '',
+    faculty_id: '',
+    room_id: '',
+    timeslot_id: ''
+  });
   const { toast } = useToast();
 
   const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
@@ -59,6 +80,7 @@ const TimetableViewer = () => {
 
   useEffect(() => {
     loadScheduledClasses();
+    loadMasterData();
   }, []);
 
   const loadScheduledClasses = async () => {
@@ -68,19 +90,19 @@ const TimetableViewer = () => {
         .select(`
           *,
           course_sections (
-            section_name,
+            id, section_name,
             courses (
-              name, code
+              id, name, code
             )
           ),
           faculty (
-            name
+            id, name
           ),
           rooms (
-            name, code
+            id, name, code
           ),
           timeslots (
-            day_of_week, start_time, end_time, slot_number
+            id, day_of_week, start_time, end_time, slot_number
           )
         `)
         .order('created_at', { ascending: false });
@@ -96,6 +118,105 @@ const TimetableViewer = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadMasterData = async () => {
+    try {
+      const [coursesData, facultyData, roomsData, timeslotsData] = await Promise.all([
+        supabase.from('course_sections').select('*, courses(*)'),
+        supabase.from('faculty').select('*'),
+        supabase.from('rooms').select('*'),
+        supabase.from('timeslots').select('*').order('day_of_week').order('slot_number')
+      ]);
+
+      setCourses(coursesData.data || []);
+      setFaculty(facultyData.data || []);
+      setRooms(roomsData.data || []);
+      setTimeslots(timeslotsData.data || []);
+    } catch (error) {
+      console.error('Error loading master data:', error);
+    }
+  };
+
+  const handleEditClass = (scheduledClass: ScheduledClass) => {
+    setSelectedClass(scheduledClass);
+    setEditForm({
+      course_section_id: scheduledClass.course_sections?.id || '',
+      faculty_id: scheduledClass.faculty?.id || '',
+      room_id: scheduledClass.rooms?.id || '',
+      timeslot_id: scheduledClass.timeslots?.id || ''
+    });
+    setEditDialogOpen(true);
+  };
+
+  const saveClassChanges = async () => {
+    if (!selectedClass) return;
+
+    try {
+      const { error } = await supabase
+        .from('scheduled_classes')
+        .update({
+          course_section_id: editForm.course_section_id,
+          faculty_id: editForm.faculty_id,
+          room_id: editForm.room_id,
+          timeslot_id: editForm.timeslot_id
+        })
+        .eq('id', selectedClass.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Class details updated successfully"
+      });
+
+      setEditDialogOpen(false);
+      loadScheduledClasses(); // Refresh the data
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update class details"
+      });
+    }
+  };
+
+  const createNewClass = async () => {
+    try {
+      const { error } = await supabase
+        .from('scheduled_classes')
+        .insert({
+          course_section_id: editForm.course_section_id,
+          faculty_id: editForm.faculty_id,
+          room_id: editForm.room_id,
+          timeslot_id: editForm.timeslot_id,
+          semester: 1,
+          semester_type: 'odd',
+          academic_year: new Date().getFullYear()
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "New class added successfully"
+      });
+
+      setEditDialogOpen(false);
+      setEditForm({
+        course_section_id: '',
+        faculty_id: '',
+        room_id: '',
+        timeslot_id: ''
+      });
+      loadScheduledClasses(); // Refresh the data
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to create new class"
+      });
     }
   };
 
@@ -213,10 +334,31 @@ const TimetableViewer = () => {
               View and manage generated timetables with conflict detection
             </p>
           </div>
-          <Button onClick={exportTimetable} className="mt-4 md:mt-0">
-            <Download className="h-4 w-4 mr-2" />
-            Export Timetable
-          </Button>
+          <div className="flex gap-2 mt-4 md:mt-0">
+            <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedClass(null);
+                    setEditForm({
+                      course_section_id: '',
+                      faculty_id: '',
+                      room_id: '',
+                      timeslot_id: ''
+                    });
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Class
+                </Button>
+              </DialogTrigger>
+            </Dialog>
+            <Button onClick={exportTimetable}>
+              <Download className="h-4 w-4 mr-2" />
+              Export Timetable
+            </Button>
+          </div>
         </div>
 
         {/* Filters */}
@@ -332,15 +474,126 @@ const TimetableViewer = () => {
                         </span>
                       </div>
                     </div>
-                    <Button variant="ghost" size="icon">
-                      <Edit className="h-4 w-4" />
-                    </Button>
+                     <Button 
+                       variant="ghost" 
+                       size="icon"
+                       onClick={(e) => {
+                         e.stopPropagation();
+                         handleEditClass(cls);
+                       }}
+                     >
+                       <Edit className="h-4 w-4" />
+                     </Button>
                   </div>
                 ))}
               </div>
             )}
           </CardContent>
         </Card>
+
+        {/* Edit/Add Class Dialog */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>
+                {selectedClass ? 'Edit Class' : 'Add New Class'}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="course">Course Section</Label>
+                <Select 
+                  value={editForm.course_section_id} 
+                  onValueChange={(value) => setEditForm({...editForm, course_section_id: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select course section" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {courses.map(course => (
+                      <SelectItem key={course.id} value={course.id}>
+                        {course.courses?.code} - {course.section_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="faculty">Faculty</Label>
+                <Select 
+                  value={editForm.faculty_id} 
+                  onValueChange={(value) => setEditForm({...editForm, faculty_id: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select faculty" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {faculty.map(f => (
+                      <SelectItem key={f.id} value={f.id}>
+                        {f.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="room">Room</Label>
+                <Select 
+                  value={editForm.room_id} 
+                  onValueChange={(value) => setEditForm({...editForm, room_id: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select room" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {rooms.map(room => (
+                      <SelectItem key={room.id} value={room.id}>
+                        {room.name} ({room.code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="timeslot">Time Slot</Label>
+                <Select 
+                  value={editForm.timeslot_id} 
+                  onValueChange={(value) => setEditForm({...editForm, timeslot_id: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select time slot" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {timeslots.map(slot => (
+                      <SelectItem key={slot.id} value={slot.id}>
+                        {slot.day_of_week} - {slot.start_time} to {slot.end_time}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 mt-6">
+              <Button 
+                variant="outline" 
+                onClick={() => setEditDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={selectedClass ? saveClassChanges : createNewClass}
+                disabled={!editForm.course_section_id || !editForm.faculty_id || !editForm.room_id || !editForm.timeslot_id}
+              >
+                <Save className="h-4 w-4 mr-2" />
+                {selectedClass ? 'Save Changes' : 'Add Class'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
